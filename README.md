@@ -25,7 +25,7 @@ Function that create a instance of the library.
 
 Works like love.graphics.draw, but it creates a calculated scale and saves it
 
-### draw(drawableObject)
+### draw(drawableObject, [isUnique])
 
 draw the object with the key saved in create function below
 

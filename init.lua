@@ -2,6 +2,7 @@ local currentPath   = (...):gsub('%.init$', '') .. "."
 local ScaleDimension = require(string.format("%sScaleDimension", currentPath))
 local StoneMoSScreen = {}; StoneMoSScreen.__index = StoneMoSScreen
 local instance = nil; local defaultDraw = love.graphics.draw
+local defaultPrint = love.graphics.print; local defaultPrintf = love.graphics.printf
 
 local function getScaleDimension()
     return instance.scaleDimension
@@ -43,6 +44,11 @@ function StoneMoSScreen:get(drawableObject)
     return self.static[drawableObject]
 end
 
+local function overridePrint(text, x, y, r, sx, sy, ox, oy)
+    local scales = instance:calculate(text, x or 0, y or 0, r or 0, sx or 1, sy or 1, ox or 0, oy or 0)
+    defaultPrint(text, scales.x, scales.y, scales.r, scales.sx, scales.sy, scales.ox, scales.oy)
+end
+
 local function overrideDraw(...)
     local parameters = {...}; local drawType = 0
     if (type(parameters[2]) == "userdata" and type(parameters[3]) == "number") then drawType = 1
@@ -65,13 +71,14 @@ end
 ]]
 local function new(override, width, height)
     if not instance then instance = StoneMoSScreen:new() end
-    if override then love.graphics.draw = overrideDraw; local temp = love.resize
+    if override then love.graphics.draw = overrideDraw; love.graphics.print = overridePrint
+        local temp = love.resize
         love.resize = function(w, h) temp(w,h); instance.scaleDimension:screenResize(w, h) end
     end
     instance.scaleDimension:setGameScreenScale(width, height)
 end
 
-local function draw(drawableObject)
+local function draw(drawableObject, isUnique)
     local scales = instance:get(drawableObject)
     if scales then defaultDraw(drawable, scales.x, scales.y, scales.r, scales.sx, scales.sy, scales.ox, scales.oy) end
 end
