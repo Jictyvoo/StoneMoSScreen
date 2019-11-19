@@ -8,9 +8,9 @@ local function getScaleDimension()
     return instance.scaleDimension
 end
 
-function StoneMoSScreen:new()
+function StoneMoSScreen:new(aspectRatio)
     return setmetatable({
-        static = {}, dynamic = {},
+        static = {}, dynamic = {}, aspectRatio = aspectRatio or false,
         scaleDimension = ScaleDimension:new()
     }, StoneMoSScreen)
 end
@@ -49,6 +49,12 @@ local function overridePrint(text, x, y, r, sx, sy, ox, oy)
     defaultPrint(text, scales.x, scales.y, scales.r, scales.sx, scales.sy, scales.ox, scales.oy)
 end
 
+local function overridePrintf(text, x, y, limit, align, r, sx, sy, ox, oy, kx, ky)
+    local scales = instance:calculate(text, x or 0, y or 0, r or 0, sx or 1, sy or 1, ox or 0, oy or 0)
+    scales.limit, scales.align = limit, align
+    defaultPrintf(text, scales.x, scales.y, scales.limit, scales.align, scales.r, scales.sx, scales.sy, scales.ox, scales.oy)
+end
+
 local function overrideDraw(...)
     local parameters = {...}; local drawType = 0
     if (type(parameters[2]) == "userdata" and type(parameters[3]) == "number") then drawType = 1
@@ -69,10 +75,10 @@ end
     width - pretended screen width
     height - pretended screen height
 ]]
-local function new(override, width, height)
-    if not instance then instance = StoneMoSScreen:new() end
+local function new(override, width, height, aspectRatio)
+    if not instance then instance = StoneMoSScreen:new(aspectRatio) end
     if override then love.graphics.draw = overrideDraw; love.graphics.print = overridePrint
-        local temp = love.resize
+        love.graphics.printf = overridePrintf; local temp = love.resize
         love.resize = function(w, h) temp(w,h); instance.scaleDimension:screenResize(w, h) end
     end
     instance.scaleDimension:setGameScreenScale(width, height)

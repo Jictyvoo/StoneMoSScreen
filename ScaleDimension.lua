@@ -1,6 +1,4 @@
-local ScaleDimension = {}
-
-ScaleDimension.__index = ScaleDimension
+local ScaleDimension = {}; ScaleDimension.__index = ScaleDimension
 
 function ScaleDimension:new()
     local this = {
@@ -44,27 +42,16 @@ function ScaleDimension:relativeScale(itemName, originalSize)
     end
 end
 
-function ScaleDimension:directScale(width, height)
-    return self.graphicsDimensions.width / width, self.graphicsDimensions.height / height
-end
-
 function ScaleDimension:generateAspectRatio(itemName, centralizeOptions)
     if self.scaleItems[itemName] then
-        local item = self.scaleItems[itemName]
-        item.aspectRatio.active = true
+        local item = self.scaleItems[itemName]; item.aspectRatio.active = true
         local x, y = false, false
         if item.scaleX < item.scaleY then
-            item.scaleY = item.scaleX
-            y = true
-            if item.relative then
-                item.relative.y = item.relative.x
-            end
+            item.scaleY = item.scaleX; y = true
+            if item.relative then item.relative.y = item.relative.x end
         else
-            item.scaleX = item.scaleY
-            x = true
-            if item.relative then
-                item.relative.x = item.relative.y
-            end
+            item.scaleX = item.scaleY; x = true
+            if item.relative then item.relative.x = item.relative.y end
         end
         if centralizeOptions then
             item.aspectRatio.centralizeOptions = centralizeOptions
