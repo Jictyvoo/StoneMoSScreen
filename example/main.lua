@@ -8,7 +8,7 @@ function love.update(dt)
 end
 
 function love.draw()
-    love.graphics.draw(image, 0, 0, r, 1.3913, 1.3071, ox, oy)
+    love.graphics.draw(image, 0, 0, r, 1.85614849187935, 1.85614849187935, ox, oy)
     love.graphics.printf("StoneMoSScreen", 400, 300, 110, "center", angle, sx, sy, 55, 5)
 end
 
