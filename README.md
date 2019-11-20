@@ -32,7 +32,7 @@ ln  ../../../ScaleDimension.lua
 
 Function that returns scale calculator class
 
-### new(override, width, height)
+### new(width, height, [override], [aspectRatio])
 
 Function that create a instance of the library.
 * override - true if want to override love.graphics.draw default library

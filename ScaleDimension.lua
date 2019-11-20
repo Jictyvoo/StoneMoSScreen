@@ -87,9 +87,9 @@ function ScaleDimension:screenResize(width, height)
         if item.relative then
             self:relativeScale(itemName, item.relative.originalSize)
         end
-        if item.aspectRatio.active then
+        --[[if item.aspectRatio.active then
             self:generateAspectRatio(itemName, item.aspectRatio.centralizeOptions)
-        end
+        end--]]
         self:centralize(itemName, item.centralizeOptions.x, item.centralizeOptions.y, item.centralizeOptions.isImage, item.centralizeOptions.centerOffset)
     end
 end

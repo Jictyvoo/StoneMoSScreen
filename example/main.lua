@@ -1,6 +1,6 @@
 function love.load()
-    StoneMoSScreen = require "libs.StoneMoSScreen"; StoneMoSScreen.new(true, 800, 600, true)
-    angle = 0
+    StoneMoSScreen = require "libs.StoneMoSScreen"; StoneMoSScreen.new(800, 600, true, true, true)
+    angle = 0; image = love.graphics.newImage("assets/background.png")
 end
 
 function love.update(dt)
@@ -8,6 +8,7 @@ function love.update(dt)
 end
 
 function love.draw()
+    love.graphics.draw(image, 0, 0, r, 1.3913, 1.3071, ox, oy)
     love.graphics.printf("StoneMoSScreen", 400, 300, 110, "center", angle, sx, sy, 55, 5)
 end
 

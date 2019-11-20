@@ -8,10 +8,10 @@ local function getScaleDimension()
     return ScaleDimension
 end
 
-function StoneMoSScreen:new(aspectRatio, width, height)
+function StoneMoSScreen:new(aspectRatio, width, height, staticText)
     local this = setmetatable({
-        static = {}, dynamic = {}, aspectRatio = {x = 0, y = 0},
-        width = width, height = height, 
+        static = {}, dynamic = {}, aspectRatio = {x = 0, y = 0, active = aspectRatio or false},
+        width = width, height = height, staticText = staticText or false,
         scaleDimension = ScaleDimension:new(width, height)
     }, StoneMoSScreen)
     if aspectRatio then this:calculateAspectRatio() end
@@ -26,7 +26,7 @@ function StoneMoSScreen:calculateAspectRatio()
     end
     self.aspectRatio.x = (love.graphics.getWidth() - (self.width * scaleX)) / 2
     self.aspectRatio.y = (love.graphics.getHeight() - (self.height * scaleY)) / 2
-    print(self.aspectRatio.x, self.aspectRatio.y)
+    --print(self.aspectRatio.x, self.aspectRatio.y)
 end
 
 function StoneMoSScreen:isStatic(drawableObject)
@@ -42,12 +42,24 @@ function StoneMoSScreen:create(objectType, drawable, x, y, r, sx, sy, ox, oy, kx
     local scales = self.scaleDimension:calculeScales(identifier, ox, oy, x, y)
     local newScale = {x = scales.scaleX * sx, y = scales.scaleY * sy, originalSize = nil}
     scales.relative = newScale; local temp = self.aspectRatio
+    if self.aspectRatio.active then self.scaleDimension:generateAspectRatio(identifier) end
     self[objectType][identifier] = {
-        x = scales.x --[[+ temp.x--]], y = scales.y --[[+ temp.y--]], sx = newScale.x, sy = newScale.y,
-        ox = --[[scales.width--]]ox, oy = --[[scales.height--]]oy, r = r, drawable = drawable
+        x = scales.x + temp.x, y = scales.y + temp.y, sx = newScale.x, sy = newScale.y,
+        ox = --[[scales.width--]]ox, oy = --[[scales.height--]]oy, r = r, drawable = drawable,
+        original_sx = sx, original_sy = sy
     }
-    --[[ print(collectgarbage("step"), collectgarbage("count")) --]]
+    collectgarbage("step"); --[[print(collectgarbage("count")))--]]
     return self[objectType][identifier]
+end
+
+function StoneMoSScreen:updateScales(identifier)
+    local sx, sy = self["static"][identifier].original_sx, self["static"][identifier].original_sy
+    local scales = self.scaleDimension:getScale(identifier)
+    local newScale = {x = scales.scaleX * sx, y = scales.scaleY * sy, originalSize = nil}
+    scales.relative = newScale; local temp = self.aspectRatio
+    if self.aspectRatio.active then self.scaleDimension:generateAspectRatio(identifier) end
+    self["static"][identifier].x = scales.x + temp.x; self["static"][identifier].y = scales.y + temp.y
+    self["static"][identifier].sx, self["static"][identifier].sy = newScale.x, newScale.y
 end
 
 function StoneMoSScreen:swap(drawableObject)
@@ -72,15 +84,15 @@ end
 
 local function overridePrint(text, x, y, r, sx, sy, ox, oy)
     local scales = instance:calculate(text, x or 0, y or 0, r or 0, sx or 1, sy or 1, ox or 0, oy or 0)
-    if not instance:isStatic() then instance:swap(text) end
+    if not instance:isStatic(text) and instance.staticText then instance:swap(text) end
     defaultPrint(text, scales.x, scales.y, scales.r, scales.sx, scales.sy, scales.ox, scales.oy)
 end
 
 local function overridePrintf(text, x, y, limit, align, r, sx, sy, ox, oy, kx, ky)
     local scales = instance:calculate(text, x or 0, y or 0, r or 0, sx or 1, sy or 1, ox or 0, oy or 0)
     scales.limit, scales.align = limit, align
-    if not instance:isStatic() then instance:swap(text) end
-    defaultPrintf(text, scales.x, scales.y, scales.limit, scales.align, scales.r, scales.sx, scales.sy, scales.ox, scales.oy)
+    if not instance:isStatic(text) and instance.staticText then instance:swap(text) end
+    defaultPrintf(text, scales.x, scales.y, scales.limit, scales.align, r, scales.sx, scales.sy, scales.ox, scales.oy)
 end
 
 local function overrideDraw(...)
@@ -110,6 +122,7 @@ end
 
 local function screenResize(w, h)
     instance:calculateAspectRatio(); instance.scaleDimension:screenResize(w, h)
+    for index, _ in pairs(instance.static) do instance:updateScales(index) end
 end
 
 --[[
@@ -117,8 +130,8 @@ end
     width - pretended screen width
     height - pretended screen height
 ]]
-local function new(override, width, height, aspectRatio)
-    if not instance then instance = StoneMoSScreen:new(aspectRatio, width, height) end
+local function new(width, height, override, aspectRatio, staticText)
+    if not instance then instance = StoneMoSScreen:new(aspectRatio, width, height, staticText) end
     if override then love.graphics.draw = overrideDraw; love.graphics.print = overridePrint
         love.graphics.printf = overridePrintf; local temp = love.resize
         love.resize = function(w, h) temp(w,h); instance.scaleDimension:screenResize(w, h) end
