@@ -1,2 +1,4 @@
-# Ignoring MoonJohn copy for example test
-examples/libs
+# Ignoring build files
+
+*.exe
+*.love
