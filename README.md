@@ -8,11 +8,29 @@ You can use it simply, like this:
 StoneMoSScreen = require "libs.StoneMoSScreen"; StoneMoSScreen.new(true, 800, 600)
 ```
 
+## Example
+
+To run example create a symlink to the two files init.lua and ScaleDimension.lua
+
+### Windows
+
+```cmd
+mklink /H init.lua "../../../init.lua"
+mklink /H ScaleDimension.lua "../../../ScaleDimension.lua"
+```
+
+### Linux
+
+```shell
+ln  ../../../init.lua
+ln  ../../../ScaleDimension.lua
+```
+
 ## Functions
 
 ### getScaleDimension()
 
-Function that returns scale calculator
+Function that returns scale calculator class
 
 ### new(override, width, height)
 

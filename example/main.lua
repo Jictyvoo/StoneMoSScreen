@@ -1,5 +1,5 @@
 function love.load()
-    StoneMoSScreen = require "libs.StoneMoSScreen"; StoneMoSScreen.new(true, 800, 600)
+    StoneMoSScreen = require "libs.StoneMoSScreen"; StoneMoSScreen.new(true, 800, 600, true)
     angle = 0
 end
 
@@ -12,5 +12,5 @@ function love.draw()
 end
 
 function love.resize(w, h)
-    StoneMoSScreen:getScaleDimension():screenResize(w, h)
+    StoneMoSScreen.screenResize(w, h)
 end

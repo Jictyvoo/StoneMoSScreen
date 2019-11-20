@@ -1,10 +1,10 @@
 local ScaleDimension = {}; ScaleDimension.__index = ScaleDimension
 
-function ScaleDimension:new()
+function ScaleDimension:new(width, height)
     local this = {
         scaleItems = {},
         graphicsDimensions = {width = love.graphics.getWidth(), height = love.graphics.getHeight()},
-        gameScreenScale = {width = 800, height = 600}
+        gameScreenScale = {width = width or 800, height = height or 600}
     }
 
     return setmetatable(this, ScaleDimension)
