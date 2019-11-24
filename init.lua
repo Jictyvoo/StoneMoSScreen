@@ -10,7 +10,7 @@ end
 
 function StoneMoSScreen:new(aspectRatio, width, height, staticText)
     local this = setmetatable({
-        static = {}, dynamic = {}, aspectRatio = {x = 0, y = 0, active = aspectRatio or false},
+        static = {}, dynamic = {}, aspectRatio = {x = 0, y = 0, inHorizontal = false, active = aspectRatio or false},
         width = width, height = height, staticText = staticText or false,
         scaleDimension = ScaleDimension:new(width, height)
     }, StoneMoSScreen)
@@ -21,8 +21,8 @@ end
 function StoneMoSScreen:calculateAspectRatio()
     local scaleX = love.graphics.getWidth() /self.width
     local scaleY = love.graphics.getHeight() / self.height
-    if scaleX < scaleY then scaleY = scaleX
-    else scaleX = scaleY
+    if scaleX < scaleY then scaleY = scaleX; self.aspectRatio.inHorizontal = true
+    else scaleX = scaleY; self.aspectRatio.inHorizontal = false
     end
     self.aspectRatio.x = (love.graphics.getWidth() - (self.width * scaleX)) / 2
     self.aspectRatio.y = (love.graphics.getHeight() - (self.height * scaleY)) / 2
@@ -33,16 +33,24 @@ function StoneMoSScreen:isStatic(drawableObject)
     return not self.dynamic[drawableObject]
 end
 
+function StoneMoSScreen:isText(objectType, identifier)
+    if self[objectType][identifier] then
+        return type(self[objectType][identifier].drawable) == "string"
+    end
+    return false
+end
+
+--[[
+    Identifier cames in drawable and in case of existing texture and quad,
+    identifier should be a table like this {identifier = "something", drawable = {texture, quad}}
+--]]
 function StoneMoSScreen:create(objectType, drawable, x, y, r, sx, sy, ox, oy, kx, ky)
     local identifier = drawable
-    if type(drawable) == "table" then
-        identifier = drawable.identifier
-        drawable = drawable.drawable
-    end
+    if type(drawable) == "table" then identifier = drawable.identifier; drawable = drawable.drawable end
     local scales = self.scaleDimension:calculeScales(identifier, ox, oy, x, y)
     local newScale = {x = scales.scaleX * sx, y = scales.scaleY * sy, originalSize = nil}
-    scales.relative = newScale; local temp = self.aspectRatio
-    if self.aspectRatio.active then self.scaleDimension:generateAspectRatio(identifier) end
+    scales.relative = newScale; local temp = self:isText(objectType, identifier) and {x = 0, y = 0} or self.aspectRatio
+    if self.aspectRatio.active then self.scaleDimension:applyAspectRatio(identifier, self.aspectRatio.inHorizontal) end
     self[objectType][identifier] = {
         x = scales.x + temp.x, y = scales.y + temp.y, sx = newScale.x, sy = newScale.y,
         ox = --[[scales.width--]]ox, oy = --[[scales.height--]]oy, r = r, drawable = drawable,
@@ -56,8 +64,8 @@ function StoneMoSScreen:updateScales(identifier)
     local sx, sy = self["static"][identifier].original_sx, self["static"][identifier].original_sy
     local scales = self.scaleDimension:getScale(identifier)
     local newScale = {x = scales.scaleX * sx, y = scales.scaleY * sy, originalSize = nil}
-    scales.relative = newScale; local temp = self.aspectRatio
-    if self.aspectRatio.active then self.scaleDimension:generateAspectRatio(identifier) end
+    scales.relative = newScale; local temp = self:isText("static", identifier) and {x = 0, y = 0} or self.aspectRatio
+    if self.aspectRatio.active then self.scaleDimension:applyAspectRatio(identifier, self.aspectRatio.inHorizontal) end
     self["static"][identifier].x = scales.x + temp.x; self["static"][identifier].y = scales.y + temp.y
     self["static"][identifier].sx, self["static"][identifier].sy = newScale.x, newScale.y
 end
@@ -70,10 +78,11 @@ end
 
 function StoneMoSScreen:calculate(drawable, x, y, r, sx, sy, ox, oy, kx, ky)
     local createdNow = false
-    local exists = self.static[drawable] or self.dynamic[drawable] or false
-    if not exists then exists = self:create("dynamic", drawable, x, y, r, sx, sy, ox, oy); createdNow = true end
-    if not instance:isStatic(drawable) and not createdNow then
-        return self:create("dynamic", drawable, x, y, r, sx, sy, ox, oy)
+    local identifier = type(drawable) == "table" and drawable.identifier or drawable
+    local exists = self.static[identifier] or self.dynamic[identifier] or false
+    if not exists then exists = self:create("dynamic", drawable, x, y, r, sx, sy, ox or 0, oy or 0); createdNow = true end
+    if not instance:isStatic(identifier) and not createdNow then
+        return self:create("dynamic", drawable, x, y, r, sx, sy, ox or 0, oy or 0)
     end
     return exists
 end
@@ -121,7 +130,8 @@ local function create(objectType, drawable, x, y, r, sx, sy, ox, oy, kx, ky)
 end
 
 local function screenResize(w, h)
-    instance:calculateAspectRatio(); instance.scaleDimension:screenResize(w, h)
+    if instance.aspectRatio.active then instance:calculateAspectRatio() end
+    instance.scaleDimension:screenResize(w, h)
     for index, _ in pairs(instance.static) do instance:updateScales(index) end
 end
 
@@ -139,12 +149,21 @@ local function new(width, height, override, aspectRatio, staticText)
     --[[instance.scaleDimension:setGameScreenScale(width, height)--]]
 end
 
-local function draw(drawableObject, isUnique)
-    local scales = instance:get(drawableObject)
-    if scales then defaultDraw(drawable, scales.x, scales.y, scales.r, scales.sx, scales.sy, scales.ox, scales.oy) end
+local function draw(identifier, ...)
+    local scales = instance:get(identifier)
+    if not scales then
+        if instance.dynamic[identifier] then identifier = {identifier = identifier, drawable = instance.dynamic[identifier].drawable} end
+        scales = instance:calculate(identifier, ...)
+    end
+    if type(scales.drawable) == "table" then
+        local object = scales.drawable
+        defaultDraw(object.texture, object.drawable, scales.x, scales.y, scales.r, scales.sx, scales.sy, scales.ox, scales.oy)
+    else
+        defaultDraw(scales.drawable, scales.x, scales.y, scales.r, scales.sx, scales.sy, scales.ox, scales.oy)
+    end
 end
 
-local function print(text)
+local function drawPrint(text)
     local scales = instance:get(text)
     defaultPrint(text, scales.x, scales.y, scales.r, scales.sx, scales.sy, scales.ox, scales.oy)
 end

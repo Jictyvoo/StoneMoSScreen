@@ -54,3 +54,12 @@ If you want to override the default function sometime you can
 ### restoreDefaultDraw()
 
 If you have overrided the default draw function, can restore it
+
+## When use overrideDefaultDraw and restoreDefaultDraw
+
+When you are using a third party library, maybe you want to resize the elements drawn by this library. So use like this
+```lua
+StoneMoSScreen:overrideDefaultDraw()
+otherLibrary:draw()
+StoneMoSScreen:restoreDefaultDraw()
+```

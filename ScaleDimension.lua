@@ -60,6 +60,17 @@ function ScaleDimension:generateAspectRatio(itemName, centralizeOptions)
     end
 end
 
+function ScaleDimension:applyAspectRatio(itemName, inHorizontal)
+    if self.scaleItems[itemName] then
+        local item = self.scaleItems[itemName]; item.aspectRatio.active = true
+        if inHorizontal then item.scaleY = item.scaleX
+            if item.relative then item.relative.y = item.relative.x end
+        else item.scaleX = item.scaleY
+            if item.relative then item.relative.x = item.relative.y end
+        end
+    end
+end
+
 function ScaleDimension:centralize(itemName, x, y, isImage, centerOffset)
     if self.scaleItems[itemName] then
         local item = self.scaleItems[itemName]
