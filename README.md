@@ -5,7 +5,7 @@ A Screen resolution library that draws objects responsive. Write your game in on
 You can use it simply, like this:
 
 ```lua
-StoneMoSScreen = require "libs.StoneMoSScreen"; StoneMoSScreen.new(true, 800, 600)
+StoneMoSScreen = require "libs.StoneMoSScreen"; StoneMoSScreen.new(800, 600, true)
 ```
 
 ## Example
@@ -41,11 +41,16 @@ Function that create a instance of the library.
 
 ### create(objectType, drawable, x, y, r, sx, sy, ox, oy, kx, ky)
 
-Works like love.graphics.draw, but it creates a calculated scale and saves it
+Works like love.graphics.draw, but it creates a calculated scale and saves it.
+Identifier cames in drawable and in case of existing texture and quad, identifier should be a table like this
+```lua
+{identifier = "something", drawable = {texture, quad}}
+```
 
-### draw(drawableObject, [isUnique])
+### draw(drawableObject, [x, y, r, sx, sy, ox, oy, kx, ky])
 
-draw the object with the key saved in create function below
+draw the object with the key saved in create function above.
+It works like, if object exists, will use the existing object values. Otherwise will generate a dynamic item and calculate it value automatically in every function call (But, to do it, at least x, y, sx and sy will be needed)
 
 ### overrideDefaultDraw()
 
